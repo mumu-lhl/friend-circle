@@ -11,6 +11,7 @@ on:
       - "links"
       - "template.html"
       - "public/*"
+      - ".github/workflows/friend_circle.yml"
 
 jobs:
   friend_circle:
@@ -25,6 +26,12 @@ jobs:
 
     - name: Friend Circle
       uses: mumu-lhl/simple-friend-circle@main
+
+    - name: Install minify
+      run: sudo apt-get install -y minify
+
+    - name: Minify
+      run: minify -r public -o .
 
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@v4
