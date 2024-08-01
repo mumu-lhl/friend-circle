@@ -16,8 +16,8 @@ const TEMPLATE = await readFile("./template.html", "utf-8");
 
 const articles: Article[] = [];
 
-const max_everyone = core.getInput("max_everyone");
-const max_number = core.getInput("max_number");
+const max_everyone = Number(core.getInput("max_everyone"));
+const max_number = Number(core.getInput("max_number"));
 
 async function readLinks(): Promise<string[][]> {
   const content = await readFile(LINKS_PATH, { encoding: "utf8" });
@@ -49,11 +49,14 @@ function articleExtracter(item: any, feed: any) {
 
 async function fetchArticles(links: any) {
   const rss = links.filter((i: string[]) => Boolean(i[0])).map(fetchRSS);
+  let index = 0;
   for (let i of rss) {
+    core.info(`Fetching ${links[index][0]}`);
     const feed = await i;
     for (let item of feed.items.slice(0, max_everyone)) {
       articleExtracter(item, feed);
     }
+    i += 1;
   }
 
   articles.sort((a, b) => b.date - a.date);
@@ -83,9 +86,17 @@ async function generate_page() {
 }
 
 async function main() {
+  core.info("Fetching links");
   const links = await readLinks();
+
+  core.startGroup("Fetching articles");
   await fetchArticles(links);
+  core.endGroup();
+
+  core.info("Generating page");
   await generate_page();
+
+  core.info("DONE");
 }
 
 try {

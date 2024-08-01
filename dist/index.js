@@ -24618,11 +24618,14 @@ function articleExtracter(item, feed) {
 }
 async function fetchArticles(links) {
   const rss = links.filter((i) => Boolean(i[0])).map(fetchRSS);
+  let index = 0;
   for (let i of rss) {
+    core.info(`Fetching ${links[index][0]}`);
     const feed = await i;
     for (let item of feed.items.slice(0, max_everyone)) {
       articleExtracter(item, feed);
     }
+    i += 1;
   }
   articles.sort((a, b) => b.date - a.date);
 }
@@ -24645,15 +24648,20 @@ async function generate_page() {
   await writeFile("public/index.html", html, { flag: "w+" });
 }
 async function main() {
+  core.info("Fetching links");
   const links = await readLinks();
+  core.startGroup("Fetching articles");
   await fetchArticles(links);
+  core.endGroup();
+  core.info("Generating page");
   await generate_page();
+  core.info("DONE");
 }
 var LINKS_PATH = "./links";
 var TEMPLATE = await readFile("./template.html", "utf-8");
 var articles = [];
-var max_everyone = core.getInput("max_everyone");
-var max_number = core.getInput("max_number");
+var max_everyone = Number(core.getInput("max_everyone"));
+var max_number = Number(core.getInput("max_number"));
 try {
   main();
 } catch (err) {
